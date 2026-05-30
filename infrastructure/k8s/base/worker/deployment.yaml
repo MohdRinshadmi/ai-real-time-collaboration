@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: worker, namespace: collab, labels: { app: worker } }
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: worker } }
+  template:
+    metadata: { labels: { app: worker } }
+    spec:
+      # Longer grace so in-flight jobs can complete or be re-queued
+      terminationGracePeriodSeconds: 90
+      containers:
+        - name: worker
+          image: ghcr.io/collab/worker:latest
+          envFrom:
+            - { secretRef: { name: worker-env } }
+          resources:
+            requests: { cpu: 250m, memory: 512Mi }
+            limits:   { cpu: '1',  memory: 1Gi }

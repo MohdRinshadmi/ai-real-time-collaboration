@@ -1,0 +1,24 @@
+# Default owner — anything not matched below
+*                               @collab/platform
+
+# Apps
+/apps/web/                      @collab/frontend
+/apps/admin/                    @collab/frontend
+/apps/api/                      @collab/backend
+/apps/realtime/                 @collab/realtime
+/apps/ai-gateway/               @collab/ai
+/apps/worker/                   @collab/backend
+
+# Shared packages
+/packages/ui/                   @collab/frontend @collab/design
+/packages/db/                   @collab/backend
+/packages/auth-core/            @collab/security
+/packages/api-contracts/        @collab/frontend @collab/backend
+
+# Infra
+/infrastructure/                @collab/platform
+/.github/                       @collab/platform
+
+# Cross-cutting concerns require security review
+/packages/auth-core/            @collab/security
+/apps/api/src/modules/auth/     @collab/security

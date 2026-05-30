@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: collab
+  namespace: collab
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: 10m
+    nginx.ingress.kubernetes.io/proxy-read-timeout: '3600'   # WS-friendly
+    nginx.ingress.kubernetes.io/proxy-send-timeout: '3600'
+    nginx.ingress.kubernetes.io/affinity: cookie
+    nginx.ingress.kubernetes.io/session-cookie-name: collab-srv
+    nginx.ingress.kubernetes.io/session-cookie-max-age: '3600'
+spec:
+  tls:
+    - hosts: [app.example.com, ws.example.com, ai.example.com]
+      secretName: collab-tls
+  rules:
+    - host: app.example.com
+      http:
+        paths:
+          - { path: /api,  pathType: Prefix, backend: { service: { name: api,        port: { number: 80 } } } }
+          - { path: /,     pathType: Prefix, backend: { service: { name: web,        port: { number: 80 } } } }
+    - host: ws.example.com
+      http:
+        paths:
+          - { path: /, pathType: Prefix, backend: { service: { name: realtime,   port: { number: 80 } } } }
+    - host: ai.example.com
+      http:
+        paths:
+          - { path: /, pathType: Prefix, backend: { service: { name: ai-gateway, port: { number: 80 } } } }

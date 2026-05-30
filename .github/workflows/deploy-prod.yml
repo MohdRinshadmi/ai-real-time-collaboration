@@ -1,0 +1,60 @@
+name: Deploy → Prod
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false   # never cancel an in-flight prod deploy
+
+jobs:
+  deploy:
+    name: Canary Rollout
+    runs-on: ubuntu-latest
+    environment: production   # gates on env-level secrets + manual approval
+    permissions:
+      contents: read
+      id-token: write          # OIDC to AWS, no static creds
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/collab-ci-deploy
+          aws-region: us-east-1
+
+      - name: kubeconfig
+        run: aws eks update-kubeconfig --name collab-prod --region us-east-1
+
+      - name: Render manifests with image tags
+        run: |
+          cd infrastructure/k8s/overlays/prod
+          sed -i "s/__WEB_TAG__/${{ github.sha }}/g; \
+                  s/__API_TAG__/${{ github.sha }}/g; \
+                  s/__REALTIME_TAG__/${{ github.sha }}/g; \
+                  s/__AI_TAG__/${{ github.sha }}/g; \
+                  s/__WORKER_TAG__/${{ github.sha }}/g" \
+                  kustomization.yaml
+
+      - name: Apply (Argo CD picks it up)
+        run: kubectl apply -k infrastructure/k8s/overlays/prod
+
+      - name: Wait for Argo Rollouts canary to promote
+        run: |
+          kubectl argo rollouts get rollout api -n collab --watch --timeout 30m
+          kubectl argo rollouts get rollout realtime -n collab --watch --timeout 30m
+
+      - name: Smoke tests
+        run: ./scripts/smoke-tests.sh https://app.example.com
+
+      - name: Notify Slack
+        if: always()
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            { "text": "Deploy ${{ job.status }}: ${{ github.sha }}" }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_DEPLOY_WEBHOOK }}

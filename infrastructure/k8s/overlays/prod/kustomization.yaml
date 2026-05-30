@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: collab
+
+resources:
+  - ../../base
+
+images:
+  - name: ghcr.io/collab/web
+    newTag: __WEB_TAG__
+  - name: ghcr.io/collab/api
+    newTag: __API_TAG__
+  - name: ghcr.io/collab/realtime
+    newTag: __REALTIME_TAG__
+  - name: ghcr.io/collab/ai-gateway
+    newTag: __AI_TAG__
+  - name: ghcr.io/collab/worker
+    newTag: __WORKER_TAG__
+
+patches:
+  # Prod replica scale-up
+  - target: { kind: Deployment, name: api }
+    patch: |-
+      - { op: replace, path: /spec/replicas, value: 6 }
+  - target: { kind: Deployment, name: realtime }
+    patch: |-
+      - { op: replace, path: /spec/replicas, value: 6 }

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: realtime
+  namespace: collab
+  annotations:
+    # Sticky sessions: same client always lands on the same pod.
+    # Cross-pod fan-out goes through the Redis adapter.
+    service.beta.kubernetes.io/aws-load-balancer-attributes: |
+      stickiness.enabled=true,stickiness.type=lb_cookie,stickiness.lb_cookie.duration_seconds=3600
+spec:
+  type: ClusterIP
+  selector: { app: realtime }
+  ports: [{ port: 80, targetPort: 4001 }]
+  sessionAffinity: ClientIP

@@ -1,0 +1,33 @@
+{
+  "name": "@collab/ai-gateway",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx watch src/main.ts",
+    "start": "node dist/main.js",
+    "lint": "eslint src --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.20.0",
+    "@collab/api-contracts": "workspace:*",
+    "@collab/auth-core": "workspace:*",
+    "@collab/db": "workspace:*",
+    "@collab/logger": "workspace:*",
+    "fastify": "^4.27.0",
+    "ioredis": "^5.4.0",
+    "openai": "^4.40.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@collab/config": "workspace:*",
+    "@types/node": "^20.11.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.4.0"
+  }
+}

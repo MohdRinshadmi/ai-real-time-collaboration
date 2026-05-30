@@ -1,0 +1,14 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : [],
+		"nodes" : []
+	},
+	"installers" : [],
+	"paths" : 
+	{
+		"build" : "safeareacontext_autolinked_build",
+		"source" : "/Users/ioss/Documents/StudyProjects/full-stack/AI-powered-real-time-collaboration/apps/mobile/node_modules/react-native-safe-area-context/android/src/main/jni"
+	}
+}

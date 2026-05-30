@@ -1,0 +1,24 @@
+# React Native / native build artefacts
+node_modules/
+.turbo/
+
+# Android
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+*.keystore
+!debug.keystore
+
+# iOS
+ios/Pods/
+ios/build/
+ios/*.xcworkspace/xcuserdata/
+ios/.xcode.env.local
+
+# Metro / Hermes
+.metro-health-check*
+*.jsbundle
+
+# Env
+.env

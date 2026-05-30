@@ -1,0 +1,56 @@
+{
+  "name": "@collab/mobile",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI-powered real-time collaboration — React Native mobile app",
+  "scripts": {
+    "start": "react-native start",
+    "android": "react-native run-android",
+    "ios": "react-native run-ios",
+    "pods": "cd ios && pod install",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --ext .ts,.tsx --max-warnings 0",
+    "test": "jest",
+    "clean": "rm -rf node_modules .turbo $TMPDIR/metro-* && watchman watch-del-all 2>/dev/null || true"
+  },
+  "dependencies": {
+    "@collab/api-contracts": "workspace:*",
+    "@collab/types": "workspace:*",
+    "@hookform/resolvers": "^3.9.0",
+    "@react-native-async-storage/async-storage": "^2.1.0",
+    "@react-navigation/bottom-tabs": "^7.2.0",
+    "@react-navigation/native": "^7.0.14",
+    "@react-navigation/native-stack": "^7.2.0",
+    "@tanstack/react-query": "^5.59.0",
+    "react": "19.2.3",
+    "react-hook-form": "^7.53.0",
+    "react-native": "0.84.0",
+    "react-native-keychain": "^10.0.0",
+    "react-native-safe-area-context": "^5.1.0",
+    "react-native-screens": "^4.6.0",
+    "socket.io-client": "^4.8.1",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.0",
+    "@babel/preset-env": "^7.25.0",
+    "@babel/runtime": "^7.25.0",
+    "@react-native-community/cli": "^16.0.0",
+    "@react-native-community/cli-platform-android": "^16.0.0",
+    "@react-native-community/cli-platform-ios": "^16.0.0",
+    "@react-native/babel-preset": "0.84.0",
+    "@react-native/eslint-config": "0.84.0",
+    "@react-native/metro-config": "0.84.0",
+    "@react-native/typescript-config": "0.84.0",
+    "@types/jest": "^29.5.13",
+    "@types/react": "^19.2.0",
+    "babel-plugin-module-resolver": "^5.0.2",
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0",
+    "react-test-renderer": "19.2.3",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=20.11.0"
+  }
+}

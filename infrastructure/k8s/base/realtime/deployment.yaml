@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: realtime, namespace: collab, labels: { app: realtime } }
+spec:
+  replicas: 3
+  selector: { matchLabels: { app: realtime } }
+  template:
+    metadata:
+      labels: { app: realtime }
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '9464'
+    spec:
+      tolerations:
+        - { key: workload, operator: Equal, value: realtime, effect: NoSchedule }
+      nodeSelector: { workload: realtime }
+      # Longer grace period for in-flight WebSocket clients to reconnect elsewhere
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: realtime
+          image: ghcr.io/collab/realtime:latest
+          ports: [{ name: ws, containerPort: 4001 }]
+          envFrom:
+            - { secretRef: { name: realtime-env } }
+          resources:
+            requests: { cpu: 500m, memory: 1Gi }
+            limits:   { cpu: '2',  memory: 2Gi }
+          readinessProbe: { httpGet: { path: /healthz, port: ws }, initialDelaySeconds: 5 }
+          livenessProbe:  { httpGet: { path: /healthz, port: ws }, initialDelaySeconds: 30 }
+          lifecycle:
+            preStop:
+              exec: { command: ['sh', '-c', 'sleep 30'] }   # drain WS conns

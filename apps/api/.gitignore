@@ -1,0 +1,25 @@
+node_modules/
+dist/
+.turbo/
+
+# Local env
+.env
+.env.local
+
+# Logs
+logs/*.log
+logs/*.json
+npm-debug.log*
+
+# Runtime uploads (keep the folder, ignore contents)
+uploads/*
+!uploads/.gitkeep
+
+# Secrets / keys (keep the folder, ignore contents)
+keys/*
+!keys/.gitkeep
+!keys/README.md
+
+# OS / editor
+.DS_Store
+*.swp

@@ -1,0 +1,5 @@
+/Users/ioss/Documents/StudyProjects/full-stack/AI-powered-real-time-collaboration/apps/mobile/node_modules/@react-native-async-storage/async-storage/android/build/generated/source/codegen/jni/CMakeLists.txt
+/Users/ioss/Documents/StudyProjects/full-stack/AI-powered-real-time-collaboration/apps/mobile/node_modules/react-native-keychain/android/build/generated/source/codegen/jni/CMakeLists.txt
+/Users/ioss/Documents/StudyProjects/full-stack/AI-powered-real-time-collaboration/apps/mobile/node_modules/react-native-safe-area-context/android/src/main/jni/CMakeLists.txt
+/Users/ioss/Documents/StudyProjects/full-stack/AI-powered-real-time-collaboration/apps/mobile/node_modules/react-native-screens/android/src/main/jni/CMakeLists.txt
+/Users/ioss/Documents/StudyProjects/full-stack/AI-powered-real-time-collaboration/node_modules/.pnpm/react-native@0.84.0_@babel+core@7.29.7_@react-native-community+cli@16.0.3_typescript@5.9.3__@_x5aeonzdibr2hed44cuhoirc54/node_modules/react-native/ReactAndroid/cmake-utils/default-app-setup/CMakeLists.txt

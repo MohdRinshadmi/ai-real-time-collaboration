@@ -1,0 +1,48 @@
+#!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-var-requires */
+// CommonJS bootstrap (like express-generator's bin/www). It registers Babel so
+// the rest of the codebase can use ESM `import` syntax, then loads the app.
+// Keeping this file CJS stops Node 22's ESM auto-detection from bypassing the
+// @babel/register require-hook.
+require('@babel/register');
+
+const http = require('node:http');
+
+// Prisma returns BigInt for some columns (e.g. File.sizeBytes); make those
+// JSON-serializable so res.json() doesn't throw. Must run before any response.
+// eslint-disable-next-line no-extend-native
+BigInt.prototype.toJSON = function toJSON() {
+  return this.toString();
+};
+
+const app = require('../app').default;
+const config = require('../config').default;
+const { disconnect } = require('../models');
+const { redis } = require('../models/redis');
+const { logger } = require('../utils/logger');
+const { startTracing } = require('../utils/tracing');
+
+async function main() {
+  await startTracing('api');
+
+  const server = http.createServer(app);
+  server.listen(config.PORT, () => {
+    logger.info({ port: config.PORT, env: config.NODE_ENV }, 'API listening');
+  });
+
+  // --- Graceful shutdown ---------------------------------------------------
+  const shutdown = (signal) => async () => {
+    logger.info({ signal }, 'Shutting down');
+    server.close();
+    await Promise.allSettled([disconnect(), redis.quit()]);
+    process.exit(0);
+  };
+  process.on('SIGTERM', shutdown('SIGTERM'));
+  process.on('SIGINT', shutdown('SIGINT'));
+}
+
+main().catch((err) => {
+  // eslint-disable-next-line no-console
+  console.error('Bootstrap failed', err);
+  process.exit(1);
+});

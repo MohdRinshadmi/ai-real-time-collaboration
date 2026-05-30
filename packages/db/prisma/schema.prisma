@@ -1,0 +1,419 @@
+// AI-Powered Real-Time Collaboration Platform — Prisma schema
+//
+// Multi-tenancy: shared schema with `workspaceId` on every tenant-owned row.
+// Row-Level Security is enforced via raw-SQL policies in migrations
+// (see prisma/migrations/_init_rls.sql). pgvector extension powers semantic search.
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions", "fullTextSearch"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgcrypto, vector, pg_trgm]
+}
+
+// ─── Identity ────────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  passwordHash  String?
+  name          String
+  avatarUrl     String?
+  locale        String    @default("en")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  memberships     WorkspaceMember[]
+  sessions        Session[]
+  oauthAccounts   OAuthAccount[]
+  documents       Document[]        @relation("DocumentAuthor")
+  messages        Message[]
+  notifications   Notification[]
+  auditLogs       AuditLog[]
+  aiConversations AIConversation[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model OAuthAccount {
+  id           String   @id @default(cuid())
+  userId       String
+  provider     String   // 'google' | 'github'
+  providerId   String
+  accessToken  String?
+  refreshToken String?
+  expiresAt    DateTime?
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerId])
+  @@index([userId])
+  @@map("oauth_accounts")
+}
+
+model Session {
+  id              String   @id @default(cuid())
+  userId          String
+  refreshTokenHash String  @unique  // argon2id hash of refresh token
+  userAgent       String?
+  ip              String?
+  expiresAt       DateTime
+  revokedAt       DateTime?
+  createdAt       DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@map("sessions")
+}
+
+// ─── Tenancy ─────────────────────────────────────────────────────────────────
+
+enum Plan {
+  FREE
+  PRO
+  TEAM
+  ENTERPRISE
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MEMBER
+  GUEST
+}
+
+model Workspace {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  logoUrl   String?
+  plan      Plan     @default(FREE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  members       WorkspaceMember[]
+  documents     Document[]
+  channels      Channel[]
+  files         File[]
+  invitations   Invitation[]
+  notifications Notification[]
+  embeddings    Embedding[]
+  auditLogs     AuditLog[]
+
+  @@index([slug])
+  @@map("workspaces")
+}
+
+model WorkspaceMember {
+  id          String   @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        Role     @default(MEMBER)
+  joinedAt    DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+  @@map("workspace_members")
+}
+
+model Invitation {
+  id          String   @id @default(cuid())
+  workspaceId String
+  email       String
+  role        Role     @default(MEMBER)
+  token       String   @unique
+  invitedBy   String
+  acceptedAt  DateTime?
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, email])
+  @@map("invitations")
+}
+
+// ─── Documents (Yjs CRDT) ────────────────────────────────────────────────────
+
+model Document {
+  id          String   @id @default(cuid())
+  workspaceId String
+  title       String   @default("Untitled")
+  icon        String?
+  parentId    String?  // tree structure (nested pages)
+  yDoc        Bytes    // latest Yjs encoded state
+  yStateVec   Bytes    // state vector for incremental sync
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  archivedAt  DateTime?
+  deletedAt   DateTime?
+
+  workspace Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  author    User              @relation("DocumentAuthor", fields: [createdBy], references: [id])
+  parent    Document?         @relation("DocumentTree", fields: [parentId], references: [id])
+  children  Document[]        @relation("DocumentTree")
+  versions  DocumentVersion[]
+  acl       DocumentACL[]
+
+  @@index([workspaceId, updatedAt(sort: Desc)])
+  @@index([workspaceId, parentId])
+  @@index([createdBy])
+  @@map("documents")
+}
+
+model DocumentVersion {
+  id         String   @id @default(cuid())
+  documentId String
+  update     Bytes    // incremental Yjs update
+  authorId   String?
+  createdAt  DateTime @default(now())
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId, createdAt])
+  @@map("document_versions")
+}
+
+enum ACLSubjectType {
+  USER
+  ROLE
+  PUBLIC
+}
+
+enum ACLPermission {
+  VIEW
+  COMMENT
+  EDIT
+  ADMIN
+}
+
+model DocumentACL {
+  id          String         @id @default(cuid())
+  documentId  String
+  subjectType ACLSubjectType
+  subjectId   String         // userId, role name, or "*"
+  permission  ACLPermission
+  createdAt   DateTime       @default(now())
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, subjectType, subjectId])
+  @@map("document_acl")
+}
+
+// ─── Chat ────────────────────────────────────────────────────────────────────
+
+enum ChannelType {
+  PUBLIC
+  PRIVATE
+  DIRECT
+}
+
+model Channel {
+  id          String      @id @default(cuid())
+  workspaceId String
+  name        String
+  topic       String?
+  type        ChannelType @default(PUBLIC)
+  createdAt   DateTime    @default(now())
+  archivedAt  DateTime?
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  messages  Message[]
+
+  @@unique([workspaceId, name])
+  @@index([workspaceId, type])
+  @@map("channels")
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  channelId String
+  authorId  String
+  content   Json     // ProseMirror JSON
+  threadId  String?  // root message of thread (null = root)
+  editedAt  DateTime?
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+
+  channel    Channel    @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  author     User       @relation(fields: [authorId], references: [id])
+  reactions  Reaction[]
+
+  @@index([channelId, createdAt(sort: Desc)])
+  @@index([threadId])
+  @@map("messages")
+}
+
+model Reaction {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  emoji     String
+  createdAt DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+  @@map("reactions")
+}
+
+// ─── Files ───────────────────────────────────────────────────────────────────
+
+model File {
+  id          String   @id @default(cuid())
+  workspaceId String
+  uploadedBy  String
+  filename    String
+  mimeType    String
+  sizeBytes   BigInt
+  s3Key       String   @unique
+  s3Bucket    String
+  scannedAt   DateTime?
+  scanResult  String?  // 'clean' | 'infected' | 'pending'
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, createdAt(sort: Desc)])
+  @@map("files")
+}
+
+// ─── Notifications ───────────────────────────────────────────────────────────
+
+enum NotificationType {
+  MENTION
+  REPLY
+  ASSIGNMENT
+  AI_COMPLETION
+  INVITATION
+  DOC_SHARED
+}
+
+model Notification {
+  id          String           @id @default(cuid())
+  workspaceId String
+  userId      String           // recipient
+  type        NotificationType
+  payload     Json
+  readAt      DateTime?
+  createdAt   DateTime         @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt(sort: Desc)])
+  @@map("notifications")
+}
+
+// ─── AI ──────────────────────────────────────────────────────────────────────
+
+model AIConversation {
+  id          String   @id @default(cuid())
+  workspaceId String
+  userId      String
+  title       String   @default("New conversation")
+  contextDocId String? // optional pinned document
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages AIMessage[]
+
+  @@index([userId, updatedAt(sort: Desc)])
+  @@map("ai_conversations")
+}
+
+enum AIMessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+  TOOL
+}
+
+model AIMessage {
+  id             String        @id @default(cuid())
+  conversationId String
+  role           AIMessageRole
+  content        String        @db.Text
+  model          String?
+  promptTokens   Int?
+  completionTokens Int?
+  costUsd        Decimal?      @db.Decimal(10, 6)
+  citations      Json?         // [{ documentId, chunkIndex, score }]
+  createdAt      DateTime      @default(now())
+
+  conversation AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@map("ai_messages")
+}
+
+model Embedding {
+  id          String                       @id @default(cuid())
+  workspaceId String
+  sourceType  String                       // 'document' | 'message'
+  sourceId    String
+  chunkIndex  Int
+  content     String                       @db.Text
+  embedding   Unsupported("vector(1536)")
+  createdAt   DateTime                     @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceType, sourceId, chunkIndex])
+  @@index([workspaceId])
+  @@map("embeddings")
+}
+
+// ─── Outbox (for Kafka cross-service events) ─────────────────────────────────
+
+model Outbox {
+  id          String   @id @default(cuid())
+  aggregateId String
+  eventType   String
+  payload     Json
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([publishedAt, createdAt])
+  @@map("outbox")
+}
+
+// ─── Audit log ───────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  workspaceId  String?
+  actorId      String?
+  action       String   // 'document.created' | 'member.invited' | ...
+  resourceType String
+  resourceId   String
+  before       Json?
+  after        Json?
+  ip           String?
+  userAgent    String?
+  requestId    String?
+  createdAt    DateTime @default(now())
+
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+  actor     User?      @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, createdAt(sort: Desc)])
+  @@index([actorId, createdAt(sort: Desc)])
+  @@map("audit_log")
+}

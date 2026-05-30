@@ -1,0 +1,18 @@
+// pnpm keeps @react-native/gradle-plugin (a transitive dep of react-native) in
+// its content-addressable store, not at ../node_modules/@react-native/...,
+// so we resolve its real path via Node instead of a hard-coded relative path.
+// (pluginManagement must be the first statement, so the lookup is inlined.)
+pluginManagement {
+    includeBuild(providers.exec {
+        commandLine("node", "--print",
+            "require('path').dirname(require.resolve('@react-native/gradle-plugin/package.json', { paths: [require('path').dirname(require.resolve('react-native/package.json'))] }))")
+    }.standardOutput.asText.get().trim())
+}
+plugins { id("com.facebook.react.settings") }
+extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autolinkLibrariesFromCommand() }
+rootProject.name = 'CollabMobile'
+include ':app'
+includeBuild(providers.exec {
+    commandLine("node", "--print",
+        "require('path').dirname(require.resolve('@react-native/gradle-plugin/package.json', { paths: [require('path').dirname(require.resolve('react-native/package.json'))] }))")
+}.standardOutput.asText.get().trim())

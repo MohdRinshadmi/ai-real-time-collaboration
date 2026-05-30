@@ -1,0 +1,37 @@
+name: Infrastructure (Terraform)
+
+on:
+  pull_request:
+    paths: ['infrastructure/terraform/**']
+  push:
+    branches: [main]
+    paths: ['infrastructure/terraform/**']
+
+jobs:
+  plan:
+    name: Plan (${{ matrix.env }})
+    runs-on: ubuntu-latest
+    permissions: { id-token: write, contents: read, pull-requests: write }
+    strategy:
+      matrix:
+        env: [dev, staging, prod]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with: { terraform_version: 1.7.5 }
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/collab-ci-tf
+          aws-region: us-east-1
+      - run: terraform fmt -check -recursive
+        working-directory: infrastructure/terraform
+      - run: terraform init
+        working-directory: infrastructure/terraform/envs/${{ matrix.env }}
+      - run: terraform validate
+        working-directory: infrastructure/terraform/envs/${{ matrix.env }}
+      - run: terraform plan -out=plan.tfplan -input=false
+        working-directory: infrastructure/terraform/envs/${{ matrix.env }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-${{ matrix.env }}
+          path: infrastructure/terraform/envs/${{ matrix.env }}/plan.tfplan
