@@ -16,11 +16,11 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --max-warnings 0",
     "clean": "rm -rf dist .turbo",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:deploy": "prisma migrate deploy",
-    "prisma:studio": "prisma studio",
-    "seed": "tsx prisma/seed.ts"
+    "prisma:generate": "dotenv -e ../../.env -- prisma generate",
+    "prisma:migrate": "dotenv -e ../../.env -- prisma migrate dev",
+    "prisma:deploy": "dotenv -e ../../.env -- prisma migrate deploy",
+    "prisma:studio": "dotenv -e ../../.env -- prisma studio",
+    "seed": "dotenv -e ../../.env -- tsx prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.13.0",
@@ -29,6 +29,7 @@
   "devDependencies": {
     "@collab/config": "workspace:*",
     "@types/pg": "^8.11.5",
+    "dotenv-cli": "^7.4.2",
     "prisma": "^5.13.0",
     "tsx": "^4.7.0",
     "typescript": "^5.4.0"
