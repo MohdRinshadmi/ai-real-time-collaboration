@@ -1,13 +1,13 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 
-import { OpenAIProvider } from '../providers/openai.provider';
+import { GeminiProvider } from '../providers/gemini.provider';
 
-const provider = new OpenAIProvider();
+const provider = new GeminiProvider();
 
 const inputSchema = z.object({
   texts: z.array(z.string().min(1)).min(1).max(128),
-  model: z.string().default('text-embedding-3-small'),
+  model: z.string().default('text-embedding-004'),
 });
 
 export async function registerEmbeddingsRoutes(app: FastifyInstance) {

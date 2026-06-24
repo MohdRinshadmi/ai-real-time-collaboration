@@ -22,7 +22,8 @@ service → ai-gateway → [routing, budget, RAG, guardrails, streaming] → pro
 
 ## Responsibilities
 
-- **Provider routing + failover** (OpenAI → Anthropic → self-hosted)
+- **Provider routing + failover** (Groq and Gemini today, selected via `AI_PROVIDER` behind a single `LLMProvider` contract; pluggable for failover / self-hosted). Embeddings always use Gemini — Groq has no embeddings endpoint.
+- **Tool calling** (function calling normalized across providers; a tool loop in the chat pipeline executes workspace-scoped tools — e.g. `search_workspace` — and feeds results back to the model)
 - **Prompt registry** (versioned templates, schemas, A/B traffic split)
 - **RAG** (chunking, embedding, pgvector retrieval, optional rerank)
 - **Guardrails** (PII redaction, moderation, output schema validation, retry-with-repair)

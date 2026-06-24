@@ -1,19 +1,18 @@
 import type { FastifyInstance } from 'fastify';
 
-import { aiChatInputSchema } from '@collab/api-contracts';
+import { aiInlineInputSchema } from '@collab/api-contracts';
 
 import { authorizeWorkspace, AuthError } from '../auth/verify';
 import { checkBudget, recordSpend, BudgetExceededError } from '../guardrails/budget';
 import { estimateCost } from '../guardrails/pricing';
-import { runChatPipeline } from '../pipelines/chat.pipeline';
+import { runInlinePipeline } from '../pipelines/inline.pipeline';
 
-// SSE-based streaming chat. We write `data: {...}\n\n` frames; the client
-// parses and dispatches each frame. Far simpler than WebSocket for one-way
-// streaming, and survives most corporate proxies.
+// SSE-based inline AI for editor selections. Same frame format as /chat/stream
+// (`data: {...}\n\n`) so the mobile useInlineAI hook reuses the SSE parser.
 
-export async function registerChatRoutes(app: FastifyInstance) {
-  app.post('/chat/stream', async (req, reply) => {
-    const body = aiChatInputSchema.parse(req.body);
+export async function registerInlineRoutes(app: FastifyInstance) {
+  app.post('/inline/stream', async (req, reply) => {
+    const body = aiInlineInputSchema.parse(req.body);
 
     try {
       await authorizeWorkspace(req, body.workspaceId);
@@ -36,11 +35,9 @@ export async function registerChatRoutes(app: FastifyInstance) {
     const write = (chunk: unknown) => reply.raw.write(`data: ${JSON.stringify(chunk)}\n\n`);
 
     try {
-      for await (const chunk of runChatPipeline({
-        workspaceId: body.workspaceId,
-        message: body.message,
-        history: [],
-        ragEnabled: body.ragEnabled,
+      for await (const chunk of runInlinePipeline({
+        action: body.action,
+        selection: body.selection,
       })) {
         write(chunk);
         if (chunk.type === 'done') {

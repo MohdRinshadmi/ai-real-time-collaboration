@@ -7,9 +7,15 @@ import { loadDocument, persistUpdate, scheduleSnapshot } from '../yjs/persistenc
 
 // Yjs sync protocol over Socket.IO:
 //
-//   client → 'doc:sync'        with state vector → server replies with diff
+//   client → 'doc:join'        with its state vector → server replies 'doc:sync'
+//   server → 'doc:sync'        {update, stateVector} → diff the client is missing
+//                              + the server's own vector so the client can reply
 //   client → 'doc:update'      with binary update → server broadcasts + persists
 //   client → 'doc:awareness'   with awareness state → server broadcasts (not persisted)
+//
+// This is a two-way state-vector exchange (the same handshake y-protocols/sync
+// performs): each side sends the other only the ops it lacks, so a client that
+// reconnects after editing offline converges in a single round-trip.
 //
 // Each document has an in-memory Y.Doc per pod. The Redis adapter ensures
 // updates fan out across pods; the per-pod doc keeps the state vector hot.
@@ -32,14 +38,26 @@ export function registerDocumentGateway(io: Server, logger: Logger) {
     const user = socket.data.user;
     if (!user) return socket.disconnect();
 
-    socket.on('doc:join', async ({ documentId }: { documentId: string }) => {
-      // TODO: re-check ACL via API call (cached in Redis 60s)
-      const room = `doc:${documentId}`;
-      await socket.join(room);
-      const doc = await getDoc(documentId);
-      const stateVector = Y.encodeStateVector(doc);
-      socket.emit('doc:sync', { documentId, stateVector: Array.from(stateVector) });
-    });
+    socket.on(
+      'doc:join',
+      async ({ documentId, stateVector }: { documentId: string; stateVector?: number[] }) => {
+        // TODO: re-check ACL via API call (cached in Redis 60s)
+        const room = `doc:${documentId}`;
+        await socket.join(room);
+        const doc = await getDoc(documentId);
+
+        // Diff the client is missing, computed from the state vector it sent.
+        // (Empty/absent vector → full state, e.g. a brand-new client.)
+        const clientVector = stateVector ? new Uint8Array(stateVector) : undefined;
+        const update = Y.encodeStateAsUpdate(doc, clientVector);
+
+        socket.emit('doc:sync', {
+          documentId,
+          update: Array.from(update),
+          stateVector: Array.from(Y.encodeStateVector(doc)),
+        });
+      },
+    );
 
     socket.on(
       'doc:update',

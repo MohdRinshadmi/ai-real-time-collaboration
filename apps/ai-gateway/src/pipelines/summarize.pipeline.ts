@@ -1,4 +1,4 @@
-import { streamCompletion } from '../providers/provider.factory';
+import { defaultChatModel, streamCompletion } from '../providers/provider.factory';
 
 const PROMPTS = {
   short: 'Summarize the document in 2-3 sentences.',
@@ -11,7 +11,7 @@ export async function* runSummarizePipeline(input: {
   length: keyof typeof PROMPTS;
 }) {
   yield* streamCompletion({
-    model: 'gpt-4o-mini',
+    model: defaultChatModel(),
     messages: [
       { role: 'system', content: PROMPTS[input.length] },
       { role: 'user', content: input.documentText.slice(0, 64_000) },

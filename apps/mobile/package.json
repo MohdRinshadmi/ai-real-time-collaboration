@@ -26,9 +26,14 @@
     "react-hook-form": "^7.53.0",
     "react-native": "0.84.0",
     "react-native-keychain": "^10.0.0",
+    "react-native-mmkv": "^3.1.0",
+    "react-native-reanimated": "^3.16.1",
     "react-native-safe-area-context": "^5.1.0",
     "react-native-screens": "^4.6.0",
+    "react-native-webrtc": "^124.0.4",
     "socket.io-client": "^4.8.1",
+    "y-protocols": "^1.0.6",
+    "yjs": "^13.6.14",
     "zod": "^3.23.8"
   },
   "devDependencies": {

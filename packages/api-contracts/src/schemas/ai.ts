@@ -25,6 +25,14 @@ export const aiExtractTasksInputSchema = z.object({
   documentId: z.string(),
 });
 
+export const aiInlineActionSchema = z.enum(['improve', 'explain', 'shorten', 'summarize']);
+
+export const aiInlineInputSchema = z.object({
+  workspaceId: z.string(),
+  action: aiInlineActionSchema,
+  selection: z.string().min(1).max(8000),
+});
+
 export const aiCitationSchema = z.object({
   documentId: z.string(),
   chunkIndex: z.number().int(),
@@ -35,3 +43,5 @@ export const aiCitationSchema = z.object({
 export type AIPipeline = z.infer<typeof aiPipelineSchema>;
 export type AIChatInput = z.infer<typeof aiChatInputSchema>;
 export type AICitation = z.infer<typeof aiCitationSchema>;
+export type AIInlineAction = z.infer<typeof aiInlineActionSchema>;
+export type AIInlineInput = z.infer<typeof aiInlineInputSchema>;

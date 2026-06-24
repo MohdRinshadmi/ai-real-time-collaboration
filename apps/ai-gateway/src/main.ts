@@ -3,8 +3,14 @@ import Fastify from 'fastify';
 import { createLogger } from '@collab/logger';
 
 import { registerChatRoutes } from './routes/chat';
+import { registerInlineRoutes } from './routes/inline';
 import { registerSummarizeRoutes } from './routes/summarize';
 import { registerEmbeddingsRoutes } from './routes/embeddings';
+import {
+  activeProvider,
+  defaultChatModel,
+  toolCallingEnabled,
+} from './providers/provider.factory';
 
 const logger = createLogger({
   service: 'ai-gateway',
@@ -17,12 +23,21 @@ async function bootstrap() {
   app.get('/healthz', () => ({ status: 'ok' }));
 
   await registerChatRoutes(app);
+  await registerInlineRoutes(app);
   await registerSummarizeRoutes(app);
   await registerEmbeddingsRoutes(app);
 
   const port = Number(process.env.PORT ?? 4002);
   await app.listen({ port, host: '0.0.0.0' });
-  logger.info({ port }, 'AI Gateway listening');
+  logger.info(
+    {
+      port,
+      provider: activeProvider(),
+      model: defaultChatModel(),
+      toolCalling: toolCallingEnabled(),
+    },
+    'AI Gateway listening',
+  );
 }
 
 bootstrap().catch((err) => {

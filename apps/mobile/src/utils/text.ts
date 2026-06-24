@@ -10,8 +10,8 @@ export function initials(name: string): string {
     .join('');
 }
 
-// Flattens ProseMirror-ish JSON into readable plain text for a mobile preview.
-// The full collaborative CRDT editor (TipTap + Yjs) is web-only.
+// Flattens ProseMirror-ish JSON into readable plain text. Used to seed the
+// mobile Yjs editor (see screens/DocumentScreen) from a server-stored body.
 export function extractText(node: unknown): string {
   if (!node || typeof node !== 'object') return '';
   const n = node as {text?: string; content?: unknown[]; type?: string};

@@ -11,7 +11,7 @@ import {
 import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native';
 
 import {type Message} from '@/api';
-import {Button} from '@/components';
+import {Button, VoiceHuddleBar} from '@/components';
 import {colors, fontSize, spacing} from '@/global/theme';
 import {useChannelMessages} from '@/hooks';
 import {Screen} from '@/layout';
@@ -50,6 +50,9 @@ export function ChatRoomScreen() {
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}>
+        <View style={styles.huddle}>
+          <VoiceHuddleBar room={`channel:${channelId}`} label="huddle" />
+        </View>
         <FlatList
           ref={listRef}
           inverted
@@ -95,6 +98,12 @@ export function ChatRoomScreen() {
 
 const styles = StyleSheet.create({
   flex: {flex: 1},
+  huddle: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
   listContent: {padding: spacing.lg, gap: spacing.md},
   empty: {
     textAlign: 'center',

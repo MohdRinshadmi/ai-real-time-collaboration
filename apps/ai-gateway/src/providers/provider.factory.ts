@@ -1,41 +1,58 @@
-import { AnthropicProvider } from './anthropic.provider';
-import { OpenAIProvider } from './openai.provider';
+import { GeminiProvider } from './gemini.provider';
+import { GroqProvider } from './groq.provider';
 import type { CompletionInput, CompletionStreamChunk, LLMProvider } from './types';
 
-// Provider factory with failover. If the primary provider returns a 5xx or
-// rate-limit, we fall through to the next in line. Models are routed per
-// pipeline (see pipelines/*.pipeline.ts) — cheap pipelines use Haiku/Mini.
+// Provider factory. The chat backend is selected at boot via AI_PROVIDER
+// (`groq` | `gemini`); pipelines depend only on this stable streamCompletion()
+// contract, never on a concrete SDK. Embeddings are not routed here — they
+// always use Gemini (Groq has no embeddings endpoint), so rag/retriever and the
+// /embeddings route instantiate GeminiProvider directly.
 
-const providers: Record<string, LLMProvider> = {
-  openai: new OpenAIProvider(),
-  anthropic: new AnthropicProvider(),
+export type ProviderName = 'groq' | 'gemini';
+
+function resolveProvider(): { name: ProviderName; provider: LLMProvider } {
+  const name = (process.env.AI_PROVIDER ?? 'gemini').toLowerCase() as ProviderName;
+  if (name === 'groq') return { name, provider: new GroqProvider() };
+  return { name: 'gemini', provider: new GeminiProvider() };
+}
+
+const { name: providerName, provider } = resolveProvider();
+
+// Sensible default chat model per provider, overridable via AI_DEFAULT_MODEL so
+// switching providers also switches the model without touching pipeline code.
+const DEFAULT_MODELS: Record<ProviderName, string> = {
+  groq: 'llama-3.3-70b-versatile',
+  gemini: 'gemini-2.0-flash',
 };
 
-const FAILOVER_ORDER = ['openai', 'anthropic'] as const;
+export function defaultChatModel(): string {
+  return process.env.AI_DEFAULT_MODEL || DEFAULT_MODELS[providerName];
+}
+
+export function activeProvider(): ProviderName {
+  return providerName;
+}
+
+// Tool/function calling is verified end-to-end on Groq (OpenAI-compatible).
+// On Gemini the tool-loop's function-response turn shape is unverified against
+// a live key, so it's gated OFF by default to avoid a runtime failure mid-chat.
+// Flip `gemini` to true once confirmed, or force either way with AI_TOOLS_ENABLED.
+const TOOL_CALLING_SUPPORT: Record<ProviderName, boolean> = {
+  groq: true,
+  gemini: false,
+};
+
+export function toolCallingEnabled(): boolean {
+  const override = process.env.AI_TOOLS_ENABLED;
+  if (override === 'true') return true;
+  if (override === 'false') return false;
+  return TOOL_CALLING_SUPPORT[providerName];
+}
 
 export async function* streamCompletion(
   input: CompletionInput,
 ): AsyncGenerator<CompletionStreamChunk> {
-  let lastErr: unknown;
-  for (const name of FAILOVER_ORDER) {
-    const provider = providers[name];
-    if (!provider) continue;
-    try {
-      yield* provider.streamCompletion(input);
-      return;
-    } catch (err) {
-      lastErr = err;
-      // retry next provider only on transient failures
-      if (!isTransient(err)) throw err;
-    }
-  }
-  throw lastErr ?? new Error('all providers failed');
-}
-
-function isTransient(err: unknown): boolean {
-  const status = (err as { status?: number; statusCode?: number }).status
-    ?? (err as { statusCode?: number }).statusCode;
-  return status === 429 || (status !== undefined && status >= 500);
+  yield* provider.streamCompletion(input);
 }
 
 export type { LLMProvider } from './types';

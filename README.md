@@ -10,7 +10,7 @@ apps/
   mobile/       React Native 0.84 — iOS + Android client
   api/          NestJS BFF — REST + tRPC aggregator
   realtime/     Socket.IO + Yjs CRDT sync service
-  ai-gateway/   LLM orchestration (OpenAI / Anthropic), RAG, streaming
+  ai-gateway/   LLM orchestration (Groq / Gemini), RAG, tool calling, streaming
   worker/       BullMQ background workers (email, embeddings, files)
   admin/        Internal admin dashboard
 
@@ -34,9 +34,11 @@ infrastructure/
 
 **Frontend:** React 18 · Next.js 15 · TypeScript · Tailwind · TanStack Query · Zustand · Socket.IO · TipTap + Yjs · Framer Motion
 
+**Mobile:** React Native 0.84 · Yjs CRDT (offline-first, MMKV-persisted, replay-on-reconnect) · WebRTC voice huddles (STUN/TURN) · inline AI on selections · Reanimated · SSE streaming
+
 **Backend:** Node.js · NestJS · PostgreSQL (Prisma) · Redis · Socket.IO · BullMQ · Kafka
 
-**AI:** OpenAI · Anthropic · pgvector · Cohere rerank · server-sent events streaming
+**AI:** Groq / Google Gemini (pluggable via `AI_PROVIDER`) · tool calling · pgvector · Cohere rerank · server-sent events streaming
 
 **Infra:** AWS (EKS, RDS, ElastiCache, S3, CloudFront, SES) · Terraform · Kustomize · Argo CD · GitHub Actions · OpenTelemetry · Prometheus · Grafana
 

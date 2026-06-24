@@ -1,9 +1,9 @@
 import { createPrismaClient } from '@collab/db';
 
-import { OpenAIProvider } from '../providers/openai.provider';
+import { GeminiProvider } from '../providers/gemini.provider';
 
 const prisma = createPrismaClient();
-const embedder = new OpenAIProvider();
+const embedder = new GeminiProvider();
 
 export type RetrievedChunk = {
   documentId: string;
@@ -19,7 +19,7 @@ export async function retrieve(
   query: string,
   k = 8,
 ): Promise<RetrievedChunk[]> {
-  const [embedding] = await embedder.embed([query], 'text-embedding-3-small');
+  const [embedding] = await embedder.embed([query], 'text-embedding-004');
   if (!embedding) return [];
   const literal = `[${embedding.join(',')}]`;
 
