@@ -1,5 +1,5 @@
-import { DocumentCanvas } from '@/features/editor/components/DocumentCanvas';
 import { AIInlinePanel } from '@/features/ai-assistant/components/AIInlinePanel';
+import { DocumentCanvas } from '@/features/editor/components/DocumentCanvas';
 
 // CSR-heavy route — the editor body is hydrated from Yjs over WebSocket,
 // so SSR contributes little. We still get the workspace shell SSR'd by

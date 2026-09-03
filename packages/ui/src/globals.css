@@ -2,47 +2,99 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * "Live Canvas" design system.
+ * Identity: real-time collaboration = simultaneity. Iris is the primary/"you"
+ * cursor; amber is liveness; teal + rose are real collaborators. Neutrals are a
+ * cool graphite, never pure slate or black. Colors are HSL triplets so runtime
+ * light/dark theming works without a rebuild.
+ */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    /* Luminous cool-white canvas (landing / light surfaces). */
+    --background: 240 20% 99%;
+    --foreground: 224 22% 9%;
+    --muted: 225 24% 96%;
+    --muted-foreground: 223 12% 46%;
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --primary: 221 83% 53%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222 47% 11%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-    --ring: 221 83% 53%;
+    --card-foreground: 224 22% 9%;
+    --border: 225 22% 91%;
+    --input: 225 22% 89%;
+
+    /* Iris — electric indigo-violet, the brand + "you" cursor. */
+    --primary: 246 89% 67%;
+    --primary-foreground: 240 20% 99%;
+
+    /* Signal amber — liveness, presence pings. */
+    --accent: 38 100% 56%;
+    --accent-foreground: 224 30% 12%;
+
+    --secondary: 225 24% 95%;
+    --secondary-foreground: 224 22% 14%;
+
+    --destructive: 351 84% 60%;
+    --destructive-foreground: 240 20% 99%;
+
+    --ring: 246 89% 67%;
+
+    /* Presence — real collaborators' cursor colors. Brand, not decoration. */
+    --presence-iris: 246 89% 67%;
+    --presence-amber: 38 100% 56%;
+    --presence-teal: 172 65% 45%;
+    --presence-rose: 351 94% 71%;
+
+    --radius: 0.75rem;
   }
 
   .dark {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-    --card: 222 47% 11%;
-    --card-foreground: 210 40% 98%;
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 222 47% 11%;
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --accent: 217 33% 17%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-    --ring: 217 91% 60%;
+    /* Deep graphite app shell — where the live workspace lives. */
+    --background: 223 26% 6%;
+    --foreground: 225 25% 96%;
+    --muted: 223 18% 14%;
+    --muted-foreground: 224 14% 62%;
+    --card: 223 22% 9%;
+    --card-foreground: 225 25% 96%;
+    --border: 223 16% 16%;
+    --input: 223 16% 18%;
+
+    --primary: 246 90% 71%;
+    --primary-foreground: 223 40% 8%;
+
+    --accent: 38 100% 58%;
+    --accent-foreground: 223 40% 8%;
+
+    --secondary: 223 18% 14%;
+    --secondary-foreground: 225 25% 96%;
+
+    --destructive: 351 74% 52%;
+    --destructive-foreground: 225 25% 96%;
+
+    --ring: 246 90% 71%;
+
+    --presence-iris: 246 90% 71%;
+    --presence-amber: 38 100% 58%;
+    --presence-teal: 172 60% 52%;
+    --presence-rose: 351 94% 71%;
   }
 
-  * { @apply border-border; }
-  body { @apply bg-background text-foreground; font-feature-settings: 'rlig' 1, 'calt' 1; }
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: 'ss01' 1, 'cv05' 1, 'rlig' 1, 'calt' 1;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Quality floor: never override the reader's motion preference. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
 }

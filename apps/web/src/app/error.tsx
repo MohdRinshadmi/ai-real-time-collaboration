@@ -1,8 +1,8 @@
 'use client';
 
+import { Button } from '@collab/ui';
 import { useEffect } from 'react';
 
-import { Button } from '@collab/ui';
 
 export default function GlobalError({
   error,

@@ -1,9 +1,9 @@
 'use client';
 
+import { Avatar } from '@collab/ui';
 import { useEffect, useState } from 'react';
 import type { WebsocketProvider } from 'y-websocket';
 
-import { Avatar } from '@collab/ui';
 
 type AwarenessUser = { id: string; name: string; color: string };
 

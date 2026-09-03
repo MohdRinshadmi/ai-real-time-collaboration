@@ -1,8 +1,8 @@
 'use client';
 
+import { Button, Input } from '@collab/ui';
 import { useState } from 'react';
 
-import { Button, Input } from '@collab/ui';
 
 import { useChannelMessages } from '../hooks/useChannelMessages';
 

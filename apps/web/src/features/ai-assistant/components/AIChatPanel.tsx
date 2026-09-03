@@ -1,8 +1,8 @@
 'use client';
 
+import { Button, Input, Spinner } from '@collab/ui';
 import { useState } from 'react';
 
-import { Button, Input, Spinner } from '@collab/ui';
 
 import { useStreamChat } from '../hooks/useStreamChat';
 

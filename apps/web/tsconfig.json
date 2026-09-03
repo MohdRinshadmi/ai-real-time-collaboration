@@ -2,6 +2,10 @@
   "extends": "../../packages/config/tsconfig-react.json",
   "compilerOptions": {
     "plugins": [{ "name": "next" }],
+    // Override the shared config's `rootDir: "src"` (which resolves to
+    // packages/config/src and rejects every app file). The app root contains
+    // src, next-env.d.ts, and .next/types.
+    "rootDir": ".",
     "paths": {
       "@/*": ["./src/*"]
     }

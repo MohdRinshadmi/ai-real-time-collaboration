@@ -61,3 +61,6 @@ packages/db/node_modules/.prisma/
 # Misc
 .cache/
 .parcel-cache/
+
+# Claude
+.claude

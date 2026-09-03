@@ -1,8 +1,8 @@
 'use client';
 
+import { Button } from '@collab/ui';
 import { Sparkles } from 'lucide-react';
 
-import { Button } from '@collab/ui';
 
 // Right rail next to the document — quick AI actions scoped to the open doc.
 export function AIInlinePanel({ documentId }: { documentId: string }) {

@@ -5,22 +5,27 @@ import { forwardRef, type ButtonHTMLAttributes } from 'react';
 import { cn } from '../lib/cn';
 
 export const buttonVariants = cva(
-  'inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium tracking-tight transition-[background,box-shadow,transform,color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 active:translate-y-px [&_svg]:size-[1.15em] [&_svg]:shrink-0',
   {
     variants: {
       variant: {
-        primary: 'bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-primary',
-        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-        ghost: 'hover:bg-accent hover:text-accent-foreground',
-        outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
-        destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+        // Signature CTA — iris→amber, the brand gradient. Spend boldness here.
+        primary:
+          'bg-primary text-primary-foreground shadow-elevate hover:shadow-glow-iris hover:brightness-[1.05]',
+        brand:
+          'bg-iris-amber text-primary-foreground shadow-elevate hover:shadow-glow-iris hover:brightness-[1.04]',
+        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/70',
+        ghost: 'text-foreground/80 hover:bg-muted hover:text-foreground',
+        outline:
+          'border border-border bg-background/60 backdrop-blur hover:border-primary/40 hover:bg-muted',
+        destructive: 'bg-destructive text-destructive-foreground shadow-elevate hover:brightness-105',
         link: 'text-primary underline-offset-4 hover:underline',
       },
       size: {
-        sm: 'h-8 px-3',
-        md: 'h-10 px-4 py-2',
-        lg: 'h-12 px-6 text-base',
-        icon: 'h-10 w-10',
+        sm: 'h-9 px-3.5 text-sm',
+        md: 'h-11 px-5 text-sm',
+        lg: 'h-[3.25rem] px-7 text-base',
+        icon: 'h-11 w-11',
       },
     },
     defaultVariants: { variant: 'primary', size: 'md' },
